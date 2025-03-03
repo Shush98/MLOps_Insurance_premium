@@ -1,0 +1,37 @@
+ML_Project/
+│── data/                # Store raw and processed data
+│   ├── raw/             # Raw datasets (never modify manually)
+│   ├── processed/       # Cleaned and feature-engineered datasets
+│   ├── external/        # External data sources (if applicable)
+│
+│── notebooks/           # Jupyter notebooks for EDA, experiments, and visualization
+│   ├── 01_eda.ipynb     # Exploratory Data Analysis (EDA)
+│   ├── 02_preprocessing.ipynb  # Data Cleaning & Feature Engineering
+│   ├── 03_modeling.ipynb       # Model Training & Evaluation
+│
+│── src/                 # Source code for the project
+│   ├── data_processing.py  # Data cleaning & transformation functions
+│   ├── feature_engineering.py  # Feature engineering utilities
+│   ├── model.py         # Model training & evaluation functions
+│   ├── predict.py       # Inference script for trained models
+│   ├── train.py         # Training pipeline script
+│   ├── utils.py         # Helper functions (logging, metrics, etc.)
+│
+│── models/              # Store trained models & checkpoints
+│   ├── model.pkl        # Trained ML model
+│   ├── model_metadata.json  # Model metadata (hyperparameters, performance metrics)
+│
+│── reports/             # Reports and visualizations
+│   ├── figures/         # Store plots & graphs
+│   ├── summary.pdf      # Final report summarizing results
+│
+│── tests/               # Unit and integration tests
+│   ├── test_data_processing.py  # Test data pipeline
+│   ├── test_model.py     # Test model performance & functions
+│
+│── requirements.txt      # List of required Python packages
+│── environment.yml       # Conda environment file (alternative to requirements.txt)
+│── config.yaml           # Configuration settings (hyperparameters, paths, etc.)
+│── main.py               # Entry point for running the entire ML pipeline
+│── README.md             # Documentation & instructions
+│── .gitignore            # Ignore unnecessary files (e.g., data, logs, checkpoints)
