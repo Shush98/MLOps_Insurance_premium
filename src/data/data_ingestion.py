@@ -55,14 +55,17 @@ def load_data(data_url: str) -> pd.DataFrame:
 def preprocess_data(df: pd.DataFrame) -> pd.DataFrame:
     """Preprocess the data by handling missing values, duplicates, and empty strings."""
     try:
-        # Removing missing values
-        df.dropna(inplace=True)
-        # Removing duplicates
-        df.drop_duplicates(inplace=True)
-        # Removing rows with empty strings
-        df = df[df['clean_comment'].str.strip() != '']
+        df['Annual Income'].fillna(df['Annual Income'].mean(),inplace=True)
+        df['Marital Status'].fillna('Single',inplace=True)
+        df['Number of Dependents'].fillna(0.0,inplace=True)
+        df['Occupation'].fillna('Unknown',inplace=True)
+        df['Health Score'].fillna(df['Health Score'].mean(),inplace=True)
+        df['Previous Claims'].fillna(0.0,inplace=True)
+        df['Credit Score'].fillna(df['Credit Score'].mean(),inplace=True)
+        df['Customer Feedback'].fillna('Average',inplace=True)
+        df.dropna(how='any',inplace = True)
         
-        logger.debug('Data preprocessing completed: Missing values, duplicates, and empty strings removed.')
+        logger.debug('Data preprocessing completed: Missing values & duplicates removed.')
         return df
     except KeyError as e:
         logger.error('Missing column in the dataframe: %s', e)
@@ -74,7 +77,7 @@ def preprocess_data(df: pd.DataFrame) -> pd.DataFrame:
 def save_data(train_data: pd.DataFrame, test_data: pd.DataFrame, data_path: str) -> None:
     """Save the train and test datasets, creating the raw folder if it doesn't exist."""
     try:
-        raw_data_path = os.path.join(data_path, 'raw')
+        raw_data_path = os.path.join(data_path, 'raw_data')
         
         # Create the data/raw directory if it does not exist
         os.makedirs(raw_data_path, exist_ok=True)
@@ -95,7 +98,7 @@ def main():
         test_size = params['data_ingestion']['test_size']
         
         # Load data from the specified URL
-        df = load_data(data_url='https://raw.githubusercontent.com/Himanshu-1703/reddit-sentiment-analysis/refs/heads/main/data/reddit.csv')
+        df = load_data(data_url='https://raw.githubusercontent.com/Shush98/MLOps_Insurance_premium/refs/heads/main/data/raw.csv')
         
         # Preprocess the data
         final_df = preprocess_data(df)
