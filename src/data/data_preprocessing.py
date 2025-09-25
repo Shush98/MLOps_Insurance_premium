@@ -1,11 +1,8 @@
 import numpy as np
 import pandas as pd
 import os
+from datetime import datetime, date
 import re
-import nltk
-import string
-from nltk.corpus import stopwords
-from nltk.stem import WordNetLemmatizer
 import logging
 
 # logging configuration
@@ -25,47 +22,40 @@ file_handler.setFormatter(formatter)
 logger.addHandler(console_handler)
 logger.addHandler(file_handler)
 
-# Download required NLTK data
-nltk.download('wordnet')
-nltk.download('stopwords')
-
+def age(born):
+    born = str(born)
+    born = datetime.strptime(born, "%Y-%m-%d %H:%M:%S.%f").date()
+    today = date.today()
+    return today.year - born.year - ((today.month,
+                                      today.day) < (born.month,
+                                                    born.day))
 # Define the preprocessing function
-def preprocess_comment(comment):
-    """Apply preprocessing transformations to a comment."""
+def outlier_removal(df):
     try:
-        # Convert to lowercase
-        comment = comment.lower()
+        Q1 = df['Premium Amount'].quantile(0.25)
+        Q3 = df['Premium Amount'].quantile(0.75)
+        IQR = Q3 - Q1
+        lower = Q1 - 1.5*IQR
+        upper = Q3 + 1.5*IQR
 
-        # Remove trailing and leading whitespaces
-        comment = comment.strip()
+        upper_array = np.where(df['Premium Amount'] >= upper)[0]
+        lower_array = np.where(df['Premium Amount'] <= lower)[0]
 
-        # Remove newline characters
-        comment = re.sub(r'\n', ' ', comment)
+        df.drop(index=np.concatenate((upper_array, lower_array)),inplace=True).reset_index(drop=True)
 
-        # Remove non-alphanumeric characters, except punctuation
-        comment = re.sub(r'[^A-Za-z0-9\s!?.,]', '', comment)
-
-        # Remove stopwords but retain important ones for sentiment analysis
-        stop_words = set(stopwords.words('english')) - {'not', 'but', 'however', 'no', 'yet'}
-        comment = ' '.join([word for word in comment.split() if word not in stop_words])
-
-        # Lemmatize the words
-        lemmatizer = WordNetLemmatizer()
-        comment = ' '.join([lemmatizer.lemmatize(word) for word in comment.split()])
-
-        return comment
-    except Exception as e:
-        logger.error(f"Error in preprocessing comment: {e}")
-        return comment
-
-def normalize_text(df):
-    """Apply preprocessing to the text data in the dataframe."""
-    try:
-        df['clean_comment'] = df['clean_comment'].apply(preprocess_comment)
-        logger.debug('Text normalization completed')
         return df
     except Exception as e:
-        logger.error(f"Error during text normalization: {e}")
+        logger.error(f"Error in outlier remova;: {e}")
+        return df
+
+def preprocess_data(df):
+    """Apply preprocessing to the text data in the dataframe."""
+    try:
+        df = outlier_removal(df)
+        logger.debug('Preprocessing completed')
+        return df
+    except Exception as e:
+        logger.error(f"Error during preprocessing: {e}")
         raise
 
 def save_data(train_data: pd.DataFrame, test_data: pd.DataFrame, data_path: str) -> None:
@@ -90,16 +80,18 @@ def main():
         logger.debug("Starting data preprocessing...")
         
         # Fetch the data from data/raw
-        train_data = pd.read_csv('./data/raw/train.csv')
-        test_data = pd.read_csv('./data/raw/test.csv')
+        train_data = pd.read_csv('./data/raw_data_new/train.csv')
+        test_data = pd.read_csv('./data/raw_data_new/test.csv')
         logger.debug('Data loaded successfully')
 
         # Preprocess the data
-        train_processed_data = normalize_text(train_data)
-        test_processed_data = normalize_text(test_data)
+        train_data['Policy Age'] = train_data['Policy Start Date'].apply(age)
+        test_data['Policy Age'] = test_data['Policy Start Date'].apply(age)
+
+        train_data = preprocess_data(train_data)
 
         # Save the processed data
-        save_data(train_processed_data, test_processed_data, data_path='./data')
+        save_data(train_data, test_data, data_path='./data')
     except Exception as e:
         logger.error('Failed to complete the data preprocessing process: %s', e)
         print(f"Error: {e}")
